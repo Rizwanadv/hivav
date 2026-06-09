@@ -1,0 +1,1078 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HIVAC.IO — MEP & Pipe Offset Calculators</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Mono:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --orange: #FF6B1A;
+    --orange-dim: #C04A00;
+    --steel: #1A1F2E;
+    --steel-mid: #232A3B;
+    --steel-light: #2E3650;
+    --grid-line: rgba(255,107,26,0.08);
+    --text: #F0EDE8;
+    --text-dim: #8A8F9E;
+    --text-muted: #4A5068;
+    --white: #FFFFFF;
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--steel);
+    color: var(--text);
+    overflow-x: hidden;
+    cursor: crosshair;
+  }
+
+  /* GRID TEXTURE */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(var(--grid-line) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* NAV */
+  nav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 48px;
+    height: 68px;
+    background: rgba(26,31,46,0.92);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid rgba(255,107,26,0.15);
+  }
+
+  .nav-logo {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 28px;
+    letter-spacing: 3px;
+    color: var(--white);
+    text-decoration: none;
+  }
+  .nav-logo span { color: var(--orange); }
+
+  .nav-links {
+    display: flex;
+    gap: 36px;
+    list-style: none;
+  }
+  .nav-links a {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    text-decoration: none;
+    transition: color 0.2s;
+  }
+  .nav-links a:hover { color: var(--orange); }
+
+  .nav-cta {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--orange);
+    border: 1px solid var(--orange);
+    padding: 10px 20px;
+    text-decoration: none;
+    transition: all 0.2s;
+  }
+  .nav-cta:hover { background: var(--orange); color: var(--steel); }
+
+  /* HERO */
+  .hero {
+    position: relative;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    padding: 120px 48px 80px;
+    overflow: hidden;
+    z-index: 1;
+  }
+
+  .hero-badge {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--orange);
+    border: 1px solid rgba(255,107,26,0.3);
+    display: inline-block;
+    padding: 6px 14px;
+    margin-bottom: 28px;
+    animation: fadeUp 0.8s ease both;
+  }
+
+  .hero-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(72px, 11vw, 148px);
+    line-height: 0.92;
+    letter-spacing: -2px;
+    animation: fadeUp 0.8s 0.1s ease both;
+    max-width: 900px;
+  }
+  .hero-title .outline {
+    -webkit-text-stroke: 1px rgba(240,237,232,0.25);
+    color: transparent;
+  }
+  .hero-title .accent { color: var(--orange); }
+
+  .hero-sub {
+    font-size: 16px;
+    color: var(--text-dim);
+    line-height: 1.7;
+    max-width: 480px;
+    margin: 32px 0 48px;
+    animation: fadeUp 0.8s 0.2s ease both;
+    font-weight: 300;
+  }
+
+  .hero-actions {
+    display: flex;
+    gap: 16px;
+    animation: fadeUp 0.8s 0.3s ease both;
+  }
+
+  .btn-primary {
+    font-family: 'Space Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    background: var(--orange);
+    color: var(--steel);
+    border: none;
+    padding: 16px 32px;
+    cursor: pointer;
+    text-decoration: none;
+    font-weight: 700;
+    transition: all 0.2s;
+    display: inline-block;
+  }
+  .btn-primary:hover { background: #FF8C42; transform: translateY(-1px); }
+
+  .btn-outline {
+    font-family: 'Space Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    background: transparent;
+    color: var(--text);
+    border: 1px solid rgba(240,237,232,0.2);
+    padding: 16px 32px;
+    cursor: pointer;
+    text-decoration: none;
+    transition: all 0.2s;
+    display: inline-block;
+  }
+  .btn-outline:hover { border-color: var(--orange); color: var(--orange); }
+
+  /* HERO BG DIAGRAM */
+  .hero-diagram {
+    position: absolute;
+    right: -40px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 55%;
+    opacity: 0.12;
+    pointer-events: none;
+    animation: float 6s ease-in-out infinite;
+  }
+
+  .hero-stats {
+    position: absolute;
+    right: 48px;
+    bottom: 80px;
+    display: flex;
+    gap: 48px;
+    animation: fadeUp 0.8s 0.5s ease both;
+  }
+  .stat-item { text-align: right; }
+  .stat-num {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 48px;
+    color: var(--orange);
+    line-height: 1;
+    display: block;
+  }
+  .stat-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 2px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+  }
+
+  /* SECTION BASE */
+  section { position: relative; z-index: 1; }
+
+  .section-tag {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--orange);
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .section-tag::before {
+    content: '';
+    width: 32px;
+    height: 1px;
+    background: var(--orange);
+  }
+
+  .section-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(42px, 6vw, 80px);
+    line-height: 0.95;
+    letter-spacing: -1px;
+  }
+
+  /* ABOUT STRIP */
+  .about-strip {
+    background: var(--orange);
+    padding: 20px 48px;
+    display: flex;
+    align-items: center;
+    gap: 48px;
+    overflow: hidden;
+  }
+  .ticker {
+    display: flex;
+    gap: 64px;
+    animation: ticker 18s linear infinite;
+    white-space: nowrap;
+  }
+  .ticker-item {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 18px;
+    letter-spacing: 3px;
+    color: var(--steel);
+    display: flex;
+    align-items: center;
+    gap: 24px;
+  }
+  .ticker-dot { width: 6px; height: 6px; background: var(--steel); border-radius: 50%; }
+
+  /* CALCULATORS */
+  .calculators { padding: 120px 48px; }
+
+  .calc-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-bottom: 72px;
+  }
+
+  .calc-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 2px;
+  }
+
+  .calc-card {
+    background: var(--steel-mid);
+    padding: 48px;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.35s ease;
+    cursor: pointer;
+    border: 1px solid transparent;
+  }
+  .calc-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(255,107,26,0.06) 0%, transparent 60%);
+    opacity: 0;
+    transition: opacity 0.35s;
+  }
+  .calc-card:hover {
+    background: var(--steel-light);
+    border-color: rgba(255,107,26,0.3);
+    transform: scale(1.005);
+  }
+  .calc-card:hover::before { opacity: 1; }
+
+  .calc-num {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 96px;
+    color: rgba(255,107,26,0.08);
+    line-height: 1;
+    position: absolute;
+    right: 32px;
+    top: 24px;
+    transition: color 0.35s;
+  }
+  .calc-card:hover .calc-num { color: rgba(255,107,26,0.15); }
+
+  .calc-icon {
+    width: 48px;
+    height: 48px;
+    border: 1px solid rgba(255,107,26,0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 28px;
+  }
+  .calc-icon svg { width: 24px; height: 24px; stroke: var(--orange); fill: none; }
+
+  .calc-name {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 36px;
+    letter-spacing: 1px;
+    margin-bottom: 16px;
+  }
+  .calc-desc {
+    font-size: 14px;
+    color: var(--text-dim);
+    line-height: 1.7;
+    font-weight: 300;
+    max-width: 340px;
+  }
+
+  .calc-arrow {
+    position: absolute;
+    bottom: 32px;
+    right: 32px;
+    width: 40px;
+    height: 40px;
+    border: 1px solid rgba(255,107,26,0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.25s;
+  }
+  .calc-card:hover .calc-arrow {
+    background: var(--orange);
+    border-color: var(--orange);
+  }
+  .calc-arrow svg { width: 16px; height: 16px; stroke: var(--orange); transition: stroke 0.25s; }
+  .calc-card:hover .calc-arrow svg { stroke: var(--steel); }
+
+  /* DEMO CALCULATOR */
+  .demo-section {
+    padding: 0 48px 120px;
+  }
+
+  .demo-wrap {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2px;
+    background: var(--steel-mid);
+    border: 1px solid rgba(255,107,26,0.15);
+  }
+
+  .demo-info {
+    padding: 64px;
+    background: var(--steel-mid);
+  }
+
+  .demo-calc {
+    background: var(--steel-light);
+    padding: 64px;
+  }
+
+  .calc-title {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--orange);
+    margin-bottom: 32px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .calc-title::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: rgba(255,107,26,0.2);
+  }
+
+  .calc-field {
+    margin-bottom: 20px;
+  }
+  .calc-field label {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    display: block;
+    margin-bottom: 8px;
+  }
+  .calc-field input, .calc-field select {
+    width: 100%;
+    background: var(--steel);
+    border: 1px solid rgba(255,107,26,0.2);
+    color: var(--text);
+    padding: 14px 16px;
+    font-family: 'Space Mono', monospace;
+    font-size: 14px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .calc-field input:focus, .calc-field select:focus {
+    border-color: var(--orange);
+  }
+  .calc-field select option { background: var(--steel); }
+
+  .calc-result {
+    margin-top: 32px;
+    background: var(--steel);
+    border: 1px solid rgba(255,107,26,0.3);
+    padding: 28px;
+  }
+  .result-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 8px;
+    display: block;
+  }
+  .result-value {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 52px;
+    color: var(--orange);
+    line-height: 1;
+    display: block;
+  }
+  .result-unit {
+    font-family: 'Space Mono', monospace;
+    font-size: 12px;
+    color: var(--text-dim);
+    margin-top: 4px;
+    display: block;
+  }
+
+  .result-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-top: 12px;
+  }
+  .result-mini {
+    background: var(--steel-mid);
+    padding: 16px;
+  }
+  .result-mini .result-label { margin-bottom: 4px; }
+  .result-mini .result-value { font-size: 28px; }
+
+  .calc-btn {
+    width: 100%;
+    background: var(--orange);
+    color: var(--steel);
+    border: none;
+    padding: 18px;
+    font-family: 'Space Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    font-weight: 700;
+    cursor: pointer;
+    margin-top: 20px;
+    transition: background 0.2s;
+  }
+  .calc-btn:hover { background: #FF8C42; }
+
+  /* WHY HIVAC */
+  .why-section { padding: 120px 48px; background: var(--steel-mid); }
+
+  .why-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2px;
+    margin-top: 64px;
+  }
+
+  .why-card {
+    background: var(--steel);
+    padding: 40px;
+    border-bottom: 3px solid transparent;
+    transition: border-color 0.3s;
+  }
+  .why-card:hover { border-color: var(--orange); }
+
+  .why-icon {
+    width: 40px;
+    height: 2px;
+    background: var(--orange);
+    margin-bottom: 32px;
+  }
+
+  .why-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 28px;
+    margin-bottom: 16px;
+    letter-spacing: 0.5px;
+  }
+
+  .why-text {
+    font-size: 14px;
+    color: var(--text-dim);
+    line-height: 1.8;
+    font-weight: 300;
+  }
+
+  /* FLORIDA */
+  .florida-section {
+    padding: 120px 48px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 80px;
+    align-items: center;
+  }
+
+  .florida-visual {
+    position: relative;
+    height: 420px;
+  }
+  .fl-map-bg {
+    position: absolute;
+    inset: 0;
+    border: 1px solid rgba(255,107,26,0.15);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
+
+  /* CTA SECTION */
+  .cta-section {
+    padding: 120px 48px;
+    background: var(--steel-mid);
+    text-align: center;
+  }
+  .cta-section .section-tag { justify-content: center; }
+  .cta-section .section-tag::before { display: none; }
+  .cta-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(52px, 8vw, 110px);
+    line-height: 0.92;
+    margin: 16px 0 40px;
+  }
+  .cta-title .orange { color: var(--orange); }
+  .cta-sub {
+    font-size: 16px;
+    color: var(--text-dim);
+    margin-bottom: 48px;
+    font-weight: 300;
+  }
+
+  /* FOOTER */
+  footer {
+    border-top: 1px solid rgba(255,107,26,0.1);
+    padding: 48px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: relative;
+    z-index: 1;
+  }
+  .footer-logo {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 24px;
+    letter-spacing: 3px;
+    color: var(--text-dim);
+  }
+  .footer-logo span { color: var(--orange); }
+  .footer-text {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 1.5px;
+    color: var(--text-muted);
+    text-align: center;
+  }
+  .footer-links {
+    display: flex;
+    gap: 24px;
+  }
+  .footer-links a {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    text-decoration: none;
+    transition: color 0.2s;
+  }
+  .footer-links a:hover { color: var(--orange); }
+
+  /* ANIMATIONS */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(24px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes float {
+    0%, 100% { transform: translateY(-50%) rotate(0deg); }
+    50%       { transform: translateY(-53%) rotate(1deg); }
+  }
+  @keyframes ticker {
+    from { transform: translateX(0); }
+    to   { transform: translateX(-50%); }
+  }
+
+  .reveal {
+    opacity: 0;
+    transform: translateY(32px);
+    transition: opacity 0.7s ease, transform 0.7s ease;
+  }
+  .reveal.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  /* MOBILE */
+  @media (max-width: 768px) {
+    nav { padding: 0 20px; }
+    .nav-links { display: none; }
+    .hero { padding: 100px 20px 60px; }
+    .hero-diagram { display: none; }
+    .hero-stats { right: 20px; bottom: 40px; gap: 24px; }
+    .stat-num { font-size: 32px; }
+    .about-strip { padding: 16px 20px; }
+    .calculators, .demo-section, .why-section, .cta-section { padding: 80px 20px; }
+    .calc-grid { grid-template-columns: 1fr; }
+    .demo-wrap { grid-template-columns: 1fr; }
+    .demo-info, .demo-calc { padding: 36px 24px; }
+    .why-grid { grid-template-columns: 1fr; }
+    .florida-section { grid-template-columns: 1fr; padding: 80px 20px; }
+    .florida-visual { height: 260px; }
+    .calc-header { flex-direction: column; align-items: flex-start; gap: 24px; }
+    footer { flex-direction: column; gap: 24px; text-align: center; }
+  }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a href="#" class="nav-logo">HIVAC<span>.</span>IO</a>
+  <ul class="nav-links">
+    <li><a href="#calculators">Calculators</a></li>
+    <li><a href="#why">Why HIVAC</a></li>
+    <li><a href="#demo">Live Demo</a></li>
+    <li><a href="#contact">Contact</a></li>
+  </ul>
+  <a href="https://hivac.io" class="nav-cta" target="_blank">Launch App →</a>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div style="position:relative;z-index:2">
+    <div class="hero-badge">Florida-Based · MEP & HVAC Platform</div>
+    <h1 class="hero-title">
+      SOLVE<br>
+      <span class="outline">COMPLEX</span><br>
+      <span class="accent">GEOMETRY</span><br>
+      <span class="outline">INSTANTLY</span>
+    </h1>
+    <p class="hero-sub">
+      Specialized calculators for pipe fitting and HVAC professionals. Eliminate math errors, reduce layout time, and nail every offset on the first try.
+    </p>
+    <div class="hero-actions">
+      <a href="https://hivac.io" class="btn-primary" target="_blank">Open Calculator</a>
+      <a href="#calculators" class="btn-outline">See All Tools</a>
+    </div>
+  </div>
+
+  <!-- BG PIPE DIAGRAM -->
+  <svg class="hero-diagram" viewBox="0 0 700 600" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <rect x="100" y="280" width="200" height="40" rx="4" stroke="#FF6B1A" stroke-width="2"/>
+    <line x1="300" y1="300" x2="380" y2="220" stroke="#FF6B1A" stroke-width="2"/>
+    <rect x="380" y="200" width="200" height="40" rx="4" stroke="#FF6B1A" stroke-width="2"/>
+    <circle cx="300" cy="300" r="8" fill="#FF6B1A" opacity="0.5"/>
+    <circle cx="380" cy="220" r="8" fill="#FF6B1A" opacity="0.5"/>
+    <line x1="200" y1="300" x2="200" y2="220" stroke="#FF6B1A" stroke-width="1" stroke-dasharray="4 4"/>
+    <line x1="100" y1="220" x2="300" y2="220" stroke="#FF6B1A" stroke-width="1" stroke-dasharray="4 4"/>
+    <text x="210" y="265" fill="#FF6B1A" font-size="14" font-family="monospace">OFFSET</text>
+    <text x="155" y="215" fill="#FF6B1A" font-size="14" font-family="monospace">RISE</text>
+    <line x1="100" y1="400" x2="580" y2="400" stroke="#FF6B1A" stroke-width="1" opacity="0.3"/>
+    <line x1="100" y1="400" x2="140" y2="360" stroke="#FF6B1A" stroke-width="2"/>
+    <rect x="140" y="340" width="180" height="40" rx="4" stroke="#FF6B1A" stroke-width="2"/>
+    <line x1="320" y1="360" x2="360" y2="400" stroke="#FF6B1A" stroke-width="2"/>
+    <rect x="360" y="400" width="180" height="40" rx="4" stroke="#FF6B1A" stroke-width="2"/>
+    <circle cx="140" cy="360" r="6" fill="#FF6B1A" opacity="0.6"/>
+    <circle cx="320" cy="360" r="6" fill="#FF6B1A" opacity="0.6"/>
+    <circle cx="360" cy="400" r="6" fill="#FF6B1A" opacity="0.6"/>
+    <text x="185" y="358" fill="#FF6B1A" font-size="12" font-family="monospace">MITER CUT</text>
+    <text x="405" y="418" fill="#FF6B1A" font-size="12" font-family="monospace">TRAVEL</text>
+    <line x1="490" y1="340" x2="490" y2="100" stroke="#FF6B1A" stroke-width="2"/>
+    <line x1="470" y1="100" x2="600" y2="100" stroke="#FF6B1A" stroke-width="2"/>
+    <circle cx="490" cy="100" r="8" fill="#FF6B1A" opacity="0.4"/>
+    <circle cx="490" cy="340" r="8" fill="#FF6B1A" opacity="0.4"/>
+    <line x1="540" y1="100" x2="540" y2="340" stroke="#FF6B1A" stroke-width="1" stroke-dasharray="3 3"/>
+    <text x="545" y="225" fill="#FF6B1A" font-size="12" font-family="monospace">LENGTH</text>
+    <line x1="490" y1="150" x2="600" y2="150" stroke="#FF6B1A" stroke-width="1" opacity="0.2"/>
+    <line x1="490" y1="200" x2="600" y2="200" stroke="#FF6B1A" stroke-width="1" opacity="0.2"/>
+    <line x1="490" y1="250" x2="600" y2="250" stroke="#FF6B1A" stroke-width="1" opacity="0.2"/>
+    <line x1="490" y1="300" x2="600" y2="300" stroke="#FF6B1A" stroke-width="1" opacity="0.2"/>
+  </svg>
+
+  <div class="hero-stats">
+    <div class="stat-item">
+      <span class="stat-num">4</span>
+      <span class="stat-label">Calculators</span>
+    </div>
+    <div class="stat-item">
+      <span class="stat-num">0</span>
+      <span class="stat-label">Math Errors</span>
+    </div>
+    <div class="stat-item">
+      <span class="stat-num">∞</span>
+      <span class="stat-label">Time Saved</span>
+    </div>
+  </div>
+</section>
+
+<!-- TICKER -->
+<div class="about-strip">
+  <div class="ticker" id="ticker">
+    <span class="ticker-item">Flat Patterns <span class="ticker-dot"></span></span>
+    <span class="ticker-item">Elbow Sections <span class="ticker-dot"></span></span>
+    <span class="ticker-item">Angular Offsets <span class="ticker-dot"></span></span>
+    <span class="ticker-item">Miter Cut Offsets <span class="ticker-dot"></span></span>
+    <span class="ticker-item">MEP Professionals <span class="ticker-dot"></span></span>
+    <span class="ticker-item">HVAC Installation <span class="ticker-dot"></span></span>
+    <span class="ticker-item">Pipe Fitting <span class="ticker-dot"></span></span>
+    <span class="ticker-item">Reduce Errors <span class="ticker-dot"></span></span>
+    <span class="ticker-item">Florida-Based <span class="ticker-dot"></span></span>
+    <span class="ticker-item">Flat Patterns <span class="ticker-dot"></span></span>
+    <span class="ticker-item">Elbow Sections <span class="ticker-dot"></span></span>
+    <span class="ticker-item">Angular Offsets <span class="ticker-dot"></span></span>
+    <span class="ticker-item">Miter Cut Offsets <span class="ticker-dot"></span></span>
+    <span class="ticker-item">MEP Professionals <span class="ticker-dot"></span></span>
+    <span class="ticker-item">HVAC Installation <span class="ticker-dot"></span></span>
+    <span class="ticker-item">Pipe Fitting <span class="ticker-dot"></span></span>
+    <span class="ticker-item">Reduce Errors <span class="ticker-dot"></span></span>
+    <span class="ticker-item">Florida-Based <span class="ticker-dot"></span></span>
+  </div>
+</div>
+
+<!-- CALCULATORS -->
+<section class="calculators" id="calculators">
+  <div class="calc-header reveal">
+    <div>
+      <div class="section-tag">Platform Tools</div>
+      <h2 class="section-title">FOUR<br>CALCULATORS</h2>
+    </div>
+    <p style="max-width:320px;color:var(--text-dim);font-size:14px;line-height:1.8;font-weight:300;">
+      Built for MEP engineers, plumbers, and fitters who need precise answers without complex manual calculations.
+    </p>
+  </div>
+
+  <div class="calc-grid">
+    <!-- Card 1 -->
+    <div class="calc-card reveal">
+      <div class="calc-num">01</div>
+      <div class="calc-icon">
+        <svg viewBox="0 0 24 24" stroke-width="1.5"><rect x="3" y="3" width="18" height="18"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="3" x2="9" y2="21"/></svg>
+      </div>
+      <div class="calc-name">Flat Patterns</div>
+      <p class="calc-desc">Simplifies layout and measurement of flat pattern developments. Get precise sheet metal dimensions for complex HVAC components instantly.</p>
+      <div class="calc-arrow">
+        <svg viewBox="0 0 24 24" stroke-width="1.5"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg>
+      </div>
+    </div>
+
+    <!-- Card 2 -->
+    <div class="calc-card reveal">
+      <div class="calc-num">02</div>
+      <div class="calc-icon">
+        <svg viewBox="0 0 24 24" stroke-width="1.5"><path d="M5 19 L5 12 Q5 5 12 5 L19 5"/><path d="M5 19 Q5 12 12 12 L19 12"/></svg>
+      </div>
+      <div class="calc-name">Elbow Sections & Double Elbows</div>
+      <p class="calc-desc">Calculates exact dimensions for dual-elbow pipe routing. Align complex pipe runs with precision-engineered elbow section data.</p>
+      <div class="calc-arrow">
+        <svg viewBox="0 0 24 24" stroke-width="1.5"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg>
+      </div>
+    </div>
+
+    <!-- Card 3 -->
+    <div class="calc-card reveal">
+      <div class="calc-num">03</div>
+      <div class="calc-icon">
+        <svg viewBox="0 0 24 24" stroke-width="1.5"><line x1="4" y1="20" x2="20" y2="4"/><line x1="4" y1="20" x2="4" y2="10"/><line x1="4" y1="20" x2="14" y2="20"/><path d="M4 14 L10 14 L10 20"/></svg>
+      </div>
+      <div class="calc-name">Angular Offsets</div>
+      <p class="calc-desc">Determines cut lengths and travel distances for angled pipeline setups. Works for any offset angle in your pipe layout.</p>
+      <div class="calc-arrow">
+        <svg viewBox="0 0 24 24" stroke-width="1.5"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg>
+      </div>
+    </div>
+
+    <!-- Card 4 -->
+    <div class="calc-card reveal">
+      <div class="calc-num">04</div>
+      <div class="calc-icon">
+        <svg viewBox="0 0 24 24" stroke-width="1.5"><line x1="3" y1="21" x2="21" y2="3"/><line x1="3" y1="3" x2="3" y2="21"/><line x1="3" y1="21" x2="21" y2="21"/></svg>
+      </div>
+      <div class="calc-name">Miter Cut Offsets</div>
+      <p class="calc-desc">Provides angle degrees and layout guidelines for mitered joints. Get the exact cut angle and travel measurement every time.</p>
+      <div class="calc-arrow">
+        <svg viewBox="0 0 24 24" stroke-width="1.5"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- LIVE DEMO -->
+<section class="demo-section" id="demo">
+  <div class="demo-wrap reveal">
+    <div class="demo-info">
+      <div class="section-tag">Try It Now</div>
+      <h2 class="section-title" style="font-size:clamp(36px,4vw,64px)">ANGULAR<br>OFFSET<br>CALCULATOR</h2>
+      <p style="color:var(--text-dim);font-size:14px;line-height:1.8;margin-top:24px;font-weight:300;">
+        Enter your pipe offset distance and angle to instantly get the cut length and travel distance. No trigonometry tables needed.
+      </p>
+      <div style="margin-top:48px;display:flex;flex-direction:column;gap:16px;">
+        <div style="display:flex;align-items:center;gap:16px;">
+          <div style="width:32px;height:1px;background:var(--orange)"></div>
+          <span style="font-family:'Space Mono',monospace;font-size:11px;letter-spacing:1.5px;color:var(--text-dim)">INSTANT RESULTS</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:16px;">
+          <div style="width:32px;height:1px;background:var(--orange)"></div>
+          <span style="font-family:'Space Mono',monospace;font-size:11px;letter-spacing:1.5px;color:var(--text-dim)">FIELD-TESTED FORMULAS</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:16px;">
+          <div style="width:32px;height:1px;background:var(--orange)"></div>
+          <span style="font-family:'Space Mono',monospace;font-size:11px;letter-spacing:1.5px;color:var(--text-dim)">WORKS ON ANY DEVICE</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="demo-calc">
+      <div class="calc-title">Angular Offset Calculator</div>
+
+      <div class="calc-field">
+        <label>Offset Distance (inches)</label>
+        <input type="number" id="offsetDist" placeholder="e.g. 12" value="12" min="0" step="0.25">
+      </div>
+
+      <div class="calc-field">
+        <label>Pipe Angle (degrees)</label>
+        <select id="pipeAngle">
+          <option value="22.5">22.5°</option>
+          <option value="30">30°</option>
+          <option value="45" selected>45°</option>
+          <option value="60">60°</option>
+        </select>
+      </div>
+
+      <div class="calc-field">
+        <label>Unit</label>
+        <select id="unit">
+          <option value="in">Inches</option>
+          <option value="mm">Millimeters</option>
+        </select>
+      </div>
+
+      <button class="calc-btn" onclick="calculate()">Calculate →</button>
+
+      <div class="calc-result">
+        <span class="result-label">Cut Length</span>
+        <span class="result-value" id="cutLength">16.97</span>
+        <span class="result-unit" id="cutUnit">inches</span>
+
+        <div class="result-grid">
+          <div class="result-mini">
+            <span class="result-label">Travel</span>
+            <span class="result-value" id="travel">12.00</span>
+            <span class="result-unit" id="travelUnit">inches</span>
+          </div>
+          <div class="result-mini">
+            <span class="result-label">Multiplier</span>
+            <span class="result-value" id="multiplier">1.414</span>
+            <span class="result-unit">constant</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- WHY HIVAC -->
+<section class="why-section" id="why">
+  <div class="reveal">
+    <div class="section-tag">The Advantage</div>
+    <h2 class="section-title">WHY HIVAC.IO</h2>
+  </div>
+
+  <div class="why-grid">
+    <div class="why-card reveal">
+      <div class="why-icon"></div>
+      <div class="why-title">Zero Math Errors</div>
+      <p class="why-text">Manual calculations on complex pipe geometries introduce compounding errors. HIVAC.IO eliminates this risk with field-verified formulas built into every calculator.</p>
+    </div>
+    <div class="why-card reveal">
+      <div class="why-icon"></div>
+      <div class="why-title">Built For the Field</div>
+      <p class="why-text">Designed with contractors, plumbers, and fitters in mind. Fast inputs, clear outputs — optimized for use on a phone or tablet right at the job site.</p>
+    </div>
+    <div class="why-card reveal">
+      <div class="why-icon"></div>
+      <div class="why-title">Unconventional Offsets</div>
+      <p class="why-text">Standard calculators fail on irregular angles and complex geometries. HIVAC.IO handles the unconventional cases that show up in real HVAC and piping installations.</p>
+    </div>
+    <div class="why-card reveal">
+      <div class="why-icon"></div>
+      <div class="why-title">MEP Specialist</div>
+      <p class="why-text">Purpose-built for Mechanical, Electrical, and Plumbing professionals — not a generic calculator. Every feature maps directly to problems you face on the job.</p>
+    </div>
+    <div class="why-card reveal">
+      <div class="why-icon"></div>
+      <div class="why-title">Instant Results</div>
+      <p class="why-text">No waiting, no manual table lookups. Enter your values and the result appears immediately — so your crew keeps moving and your schedule stays on track.</p>
+    </div>
+    <div class="why-card reveal">
+      <div class="why-icon"></div>
+      <div class="why-title">Web-Based Access</div>
+      <p class="why-text">No installation required. Access every calculator from any device with a browser. Your tools are ready whenever and wherever you need them on the job.</p>
+    </div>
+  </div>
+</section>
+
+<!-- FLORIDA -->
+<section class="florida-section">
+  <div class="reveal">
+    <div class="section-tag">Home Base</div>
+    <h2 class="section-title">FLORIDA<br>BUILT &<br>FIELD<br>TESTED</h2>
+    <p style="color:var(--text-dim);font-size:15px;line-height:1.8;margin-top:28px;font-weight:300;max-width:440px;">
+      HIVAC.IO, LLC is based in Florida and built from the ground up by MEP and HVAC professionals who understand the real challenges of pipe fitting — from unconventional building layouts to demanding commercial installations.
+    </p>
+    <p style="color:var(--text-dim);font-size:15px;line-height:1.8;margin-top:16px;font-weight:300;max-width:440px;">
+      Our tools reflect the hard-won knowledge of tradespeople who've done this work with their own hands.
+    </p>
+    <a href="https://hivac.io" class="btn-primary" style="margin-top:40px;display:inline-block" target="_blank">Visit HIVAC.IO →</a>
+  </div>
+
+  <div class="florida-visual reveal">
+    <div class="fl-map-bg">
+      <svg viewBox="0 0 400 420" fill="none" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%;padding:32px">
+        <!-- Florida shape stylized -->
+        <path d="M80 60 L310 60 L310 140 L330 180 L340 240 L340 300 Q340 320 320 340 Q290 380 270 400 Q250 420 240 410 Q230 400 220 380 Q200 340 180 310 Q160 280 140 260 L120 240 L100 220 L80 200 L70 170 L70 120 Z"
+          stroke="#FF6B1A" stroke-width="1.5" fill="rgba(255,107,26,0.04)" stroke-dasharray="8 4"/>
+        <!-- Panhandle -->
+        <path d="M80 60 L80 80 L40 80 L40 60 Z" stroke="#FF6B1A" stroke-width="1.5" fill="rgba(255,107,26,0.04)"/>
+        <!-- Location dot -->
+        <circle cx="200" cy="240" r="8" fill="#FF6B1A" opacity="0.8"/>
+        <circle cx="200" cy="240" r="20" stroke="#FF6B1A" stroke-width="1" opacity="0.3"/>
+        <circle cx="200" cy="240" r="36" stroke="#FF6B1A" stroke-width="0.5" stroke-dasharray="4 4" opacity="0.2"/>
+        <!-- Grid lines -->
+        <line x1="40" y1="120" x2="360" y2="120" stroke="#FF6B1A" stroke-width="0.5" opacity="0.15"/>
+        <line x1="40" y1="180" x2="360" y2="180" stroke="#FF6B1A" stroke-width="0.5" opacity="0.15"/>
+        <line x1="40" y1="240" x2="360" y2="240" stroke="#FF6B1A" stroke-width="0.5" opacity="0.15"/>
+        <line x1="40" y1="300" x2="360" y2="300" stroke="#FF6B1A" stroke-width="0.5" opacity="0.15"/>
+        <line x1="120" y1="40" x2="120" y2="420" stroke="#FF6B1A" stroke-width="0.5" opacity="0.15"/>
+        <line x1="200" y1="40" x2="200" y2="420" stroke="#FF6B1A" stroke-width="0.5" opacity="0.15"/>
+        <line x1="280" y1="40" x2="280" y2="420" stroke="#FF6B1A" stroke-width="0.5" opacity="0.15"/>
+        <!-- Label -->
+        <text x="212" y="235" fill="#FF6B1A" font-size="11" font-family="monospace" opacity="0.8">HIVAC.IO HQ</text>
+        <!-- Corner decorations -->
+        <line x1="40" y1="40" x2="60" y2="40" stroke="#FF6B1A" stroke-width="1"/>
+        <line x1="40" y1="40" x2="40" y2="60" stroke="#FF6B1A" stroke-width="1"/>
+        <line x1="360" y1="40" x2="340" y2="40" stroke="#FF6B1A" stroke-width="1"/>
+        <line x1="360" y1="40" x2="360" y2="60" stroke="#FF6B1A" stroke-width="1"/>
+        <line x1="40" y1="420" x2="60" y2="420" stroke="#FF6B1A" stroke-width="1"/>
+        <line x1="40" y1="420" x2="40" y2="400" stroke="#FF6B1A" stroke-width="1"/>
+        <line x1="360" y1="420" x2="340" y2="420" stroke="#FF6B1A" stroke-width="1"/>
+        <line x1="360" y1="420" x2="360" y2="400" stroke="#FF6B1A" stroke-width="1"/>
+      </svg>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="cta-section" id="contact">
+  <div class="section-tag">Get Started</div>
+  <h2 class="cta-title">STOP<br><span class="orange">GUESSING,</span><br>START<br>BUILDING</h2>
+  <p class="cta-sub">Join MEP professionals and HVAC contractors who trust HIVAC.IO on every job.</p>
+  <div style="display:flex;gap:16px;justify-content:center;flex-wrap:wrap;">
+    <a href="https://hivac.io" class="btn-primary" target="_blank">Launch App Free →</a>
+    <a href="https://instagram.com/hivac.con" class="btn-outline" target="_blank">Follow on Instagram</a>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-logo">HIVAC<span>.</span>IO</div>
+  <div class="footer-text">
+    © 2024 HIVAC.IO, LLC · Florida, USA<br>
+    MEP & HVAC Pipe Offset Calculators
+  </div>
+  <div class="footer-links">
+    <a href="https://hivac.io" target="_blank">App</a>
+    <a href="https://instagram.com/hivac.con" target="_blank">Instagram</a>
+    <a href="mailto:info@hivac.io">Contact</a>
+  </div>
+</footer>
+
+<script>
+  // CALCULATOR
+  const multipliers = { '22.5': 2.613, '30': 2.000, '45': 1.4142, '60': 1.1547 };
+
+  function calculate() {
+    const offset = parseFloat(document.getElementById('offsetDist').value) || 0;
+    const angle  = document.getElementById('pipeAngle').value;
+    const unit   = document.getElementById('unit').value;
+    const mult   = multipliers[angle];
+    let cut = offset * mult;
+    let travel = offset;
+
+    if (unit === 'mm') { cut *= 25.4; travel *= 25.4; }
+
+    const unitLabel = unit === 'in' ? 'inches' : 'millimeters';
+    document.getElementById('cutLength').textContent  = cut.toFixed(2);
+    document.getElementById('cutUnit').textContent     = unitLabel;
+    document.getElementById('travel').textContent      = travel.toFixed(2);
+    document.getElementById('travelUnit').textContent  = unitLabel;
+    document.getElementById('multiplier').textContent  = mult.toFixed(4);
+  }
+
+  document.getElementById('offsetDist').addEventListener('input', calculate);
+  document.getElementById('pipeAngle').addEventListener('change', calculate);
+  document.getElementById('unit').addEventListener('change', calculate);
+
+  // SCROLL REVEAL
+  const reveals = document.querySelectorAll('.reveal');
+  const obs = new IntersectionObserver(entries => {
+    entries.forEach((e, i) => {
+      if (e.isIntersecting) {
+        setTimeout(() => e.target.classList.add('visible'), i * 80);
+        obs.unobserve(e.target);
+      }
+    });
+  }, { threshold: 0.12 });
+  reveals.forEach(r => obs.observe(r));
+
+  // TICKER duplicate
+  const ticker = document.getElementById('ticker');
+  ticker.innerHTML += ticker.innerHTML;
+</script>
+</body>
+</html>
